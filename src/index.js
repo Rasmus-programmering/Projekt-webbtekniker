@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './app';
-import './index.css'; // Om du har en CSS-fil för generell styling
+import './index.css'; 
 
 ReactDOM.render(
   <React.StrictMode>

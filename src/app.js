@@ -1,26 +1,41 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import SearchBar from './src/components/searchbar';
-import WeatherDisplay from './src/components/weatherdisplay';
-import SavedSearches from './src/components/savedsearches';
+import SearchBar from './components/searchbar';
+import WeatherDisplay from './components/weatherdisplay';
+import SavedSearches from './components/savedsearches';
+import './index.css';
 
 const App = () => {
   const [weatherData, setWeatherData] = useState(null);
   const [savedSearches, setSavedSearches] = useState([]);
 
-  const API_KEY = 'YOUR_API_KEY';
-  const BASE_URL = 'http://api.openweathermap.org/data/2.5';
+  const getCityCoordinates = async (city) => {
+    try {
+      const response = await axios.get(`https://geocoding-api.open-meteo.com/v1/search`, {
+        params: {
+          name: city,
+        },
+      });
+      return response.data.results[0];
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const getWeather = async (city) => {
     try {
-      const response = await axios.get(`${BASE_URL}/weather`, {
+      const cityData = await getCityCoordinates(city);
+      const response = await axios.get('https://api.open-meteo.com/v1/forecast', {
         params: {
-          q: city,
-          appid: API_KEY,
-          units: 'metric',
+          latitude: cityData.latitude,
+          longitude: cityData.longitude,
+          hourly: 'temperature_2m',
         },
       });
-      setWeatherData(response.data);
+      setWeatherData({
+        city: cityData.name,
+        temperature: response.data.hourly.temperature_2m[0],
+      });
       if (!savedSearches.includes(city)) {
         setSavedSearches([...savedSearches, city]);
       }
