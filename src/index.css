@@ -214,3 +214,28 @@ button {
 h2 {
   padding-top: 2%;
 }
+
+.city-name {
+  cursor: pointer;
+  color: blue; 
+  text-decoration: underline;
+}
+
+.city-name:hover {
+  text-decoration: none;
+  color: darkblue;
+}
+
+.show-location-btn {
+  margin-top: 10px;
+  padding: 10px 15px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.show-location-btn:hover {
+  background-color: #0056b3;
+}

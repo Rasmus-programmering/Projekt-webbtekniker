@@ -54,6 +54,59 @@ const App = () => {
     }
   };
 
+  const getCityName = async (latitude, longitude) => {
+    try {
+      const response = await axios.get('https://nominatim.openstreetmap.org/reverse', {
+        params: {
+          lat: latitude,
+          lon: longitude,
+          format: 'json'
+        }
+      });
+      return response.data.address.city || response.data.address.town || response.data.address.village || 'Unknown location';
+    } catch (error) {
+      console.error(error);
+      return 'Unknown location';
+    }
+  };
+
+  const getWeatherForCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude } = position.coords;
+        const cityName = await getCityName(latitude, longitude);
+        try {
+          const response = await axios.get('https://api.open-meteo.com/v1/forecast', {
+            params: {
+              latitude: latitude,
+              longitude: longitude,
+              hourly: 'temperature_2m',
+              current_weather: true,
+            },
+          });
+
+          const temperatures = response.data.hourly.temperature_2m;
+          const currentTemperature = response.data.current_weather.temperature;
+          const weatherCondition = response.data.current_weather.weathercode;
+          const averageTemperature = temperatures.reduce((sum, temp) => sum + temp, 0) / temperatures.length;
+
+          setWeatherData({
+            city: cityName,
+            currentTemperature: isCelsius ? currentTemperature : celsiusToFahrenheit(currentTemperature),
+            averageTemperature: isCelsius ? averageTemperature : celsiusToFahrenheit(averageTemperature),
+            weatherCondition,
+          });
+        } catch (error) {
+          console.error(error);
+        }
+      }, (error) => {
+        console.error(error);
+      });
+    } else {
+      console.error('Geolocation is not supported by this browser.');
+    }
+  };
+
   const toggleTemperatureUnit = () => {
     setIsCelsius(!isCelsius);
     if (weatherData) {
@@ -90,10 +143,11 @@ const App = () => {
   return (
     <div className="container">
       <h1>Find the current and average temperature in a city, town or place</h1>
-      <div class="change-temp-btn">
-      <button onClick={toggleTemperatureUnit}>{isCelsius ? 'Fahrenheit' : 'Celsius'}</button>
+      <div className="change-temp-btn">
+        <button onClick={toggleTemperatureUnit}>{isCelsius ? 'Fahrenheit' : 'Celsius'}</button>
       </div>
       <SearchBar onSearch={getWeather} />
+      <button onClick={getWeatherForCurrentLocation}>Show Weather at My Location</button>
       <WeatherDisplay weatherData={weatherData} isCelsius={isCelsius} onAddFavorite={addFavorite} />
       <SavedSearches savedSearches={savedSearches} onSelect={getWeather} onRemove={removeSavedSearch} />
       <div className="favorites">
@@ -101,7 +155,8 @@ const App = () => {
         <ul>
           {favorites.map((city, index) => (
             <li key={index}>
-              <img src="./images/star.png" height="20px" alt="Star Icon" className="star-icon" /> {city}
+              <img src="./images/star.png" height="20px" alt="Star Icon" className="star-icon" />
+              <span className="city-name" onClick={() => getWeather(city)}>{city}</span>
               <button className="remove-btn" onClick={() => removeFavorite(city)}>Remove</button>
             </li>
           ))}
