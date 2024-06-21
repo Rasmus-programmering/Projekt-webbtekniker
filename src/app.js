@@ -16,15 +16,22 @@ const App = () => {
       const response = await axios.get(`https://geocoding-api.open-meteo.com/v1/search`, {
         params: { name: city },
       });
+
+      if (!response.data.results || response.data.results.length === 0) {
+        throw new Error('Location not found');
+      }
+
       return response.data.results[0];
     } catch (error) {
       console.error(error);
+      throw error;
     }
   };
 
   const getWeather = async (city) => {
     try {
       const cityData = await getCityCoordinates(city);
+
       const response = await axios.get('https://api.open-meteo.com/v1/forecast', {
         params: {
           latitude: cityData.latitude,
@@ -51,6 +58,7 @@ const App = () => {
       }
     } catch (error) {
       console.error(error);
+      setWeatherData({ error: 'Location not found. Please try again.' });
     }
   };
 
@@ -98,18 +106,21 @@ const App = () => {
           });
         } catch (error) {
           console.error(error);
+          setWeatherData({ error: 'An error occurred while fetching weather data. Please try again later.' });
         }
       }, (error) => {
         console.error(error);
+        setWeatherData({ error: 'An error occurred while fetching your location. Please try again later.' });
       });
     } else {
       console.error('Geolocation is not supported by this browser.');
+      setWeatherData({ error: 'Geolocation is not supported by this browser.' });
     }
   };
 
   const toggleTemperatureUnit = () => {
     setIsCelsius(!isCelsius);
-    if (weatherData) {
+    if (weatherData && !weatherData.error) {
       setWeatherData({
         ...weatherData,
         currentTemperature: isCelsius ? celsiusToFahrenheit(weatherData.currentTemperature) : fahrenheitToCelsius(weatherData.currentTemperature),
