@@ -3,6 +3,10 @@ import React from 'react';
 const WeatherDisplay = ({ weatherData, isCelsius, onAddFavorite }) => {
   if (!weatherData) return <p>No data available</p>;
 
+  if (weatherData.error) {
+    return <p>{weatherData.error}</p>;
+  }
+
   const getWeatherIcon = (weatherCode) => {
     switch (weatherCode) {
       case 0: return "☀️"; // Clear sky
@@ -43,8 +47,8 @@ const WeatherDisplay = ({ weatherData, isCelsius, onAddFavorite }) => {
       <p>Current temperature: {weatherData.currentTemperature.toFixed(2)} {isCelsius ? '°C' : '°F'}</p>
       <p>Average temperature: {weatherData.averageTemperature.toFixed(2)} {isCelsius ? '°C' : '°F'}</p>
       <p>Weather condition: {getWeatherIcon(weatherData.weatherCondition)}</p>
-      <div class="add_to_favorites_btn">
-      <button onClick={() => onAddFavorite(weatherData.city)}>Add to Favorites</button>
+      <div className="add_to_favorites_btn">
+        <button onClick={() => onAddFavorite(weatherData.city)}>Add to Favorites</button>
       </div>
     </div>
   );
