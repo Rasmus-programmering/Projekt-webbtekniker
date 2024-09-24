@@ -8,7 +8,7 @@ const SavedSearches = ({ savedSearches, onSelect, onRemove }) => {
         {savedSearches.map((city, index) => (
           <li key={index}>
             <img src="./images/save.png" height="25px" alt="Save Icon" className="save-icon" />
-            <span onClick={() => onSelect(city)}>{city}</span>
+            <span className="city-name" onClick={() => onSelect(city)}>{city}</span>
             <button className="remove-btn" onClick={() => onRemove(city)}>Remove</button>
           </li>
         ))}
@@ -18,3 +18,4 @@ const SavedSearches = ({ savedSearches, onSelect, onRemove }) => {
 };
 
 export default SavedSearches;
+
