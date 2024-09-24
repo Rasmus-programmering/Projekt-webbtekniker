@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import SearchBar from './components/searchbar';
 import WeatherDisplay from './components/weatherdisplay';
@@ -7,9 +7,28 @@ import './index.css';
 
 const App = () => {
   const [weatherData, setWeatherData] = useState(null);
-  const [savedSearches, setSavedSearches] = useState([]);
-  const [favorites, setFavorites] = useState([]);
+
+  // Använd initialisering för att hämta data från localStorage
+  const [savedSearches, setSavedSearches] = useState(() => {
+    const saved = localStorage.getItem('savedSearches');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [favorites, setFavorites] = useState(() => {
+    const saved = localStorage.getItem('favorites');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [isCelsius, setIsCelsius] = useState(true);
+
+  // Spara savedSearches och favorites till localStorage varje gång de ändras
+  useEffect(() => {
+    localStorage.setItem('savedSearches', JSON.stringify(savedSearches));
+  }, [savedSearches]);
+
+  useEffect(() => {
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+  }, [favorites]);
 
   const getCityCoordinates = async (city) => {
     try {
