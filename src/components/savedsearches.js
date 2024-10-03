@@ -3,7 +3,7 @@ import React from 'react';
 const SavedSearches = ({ savedSearches, onSelect, onRemove }) => {
   return (
     <div className="search">
-      <h2>Saved Searches</h2>
+      <h2>Search History</h2>
       <ul>
         {savedSearches.map((city, index) => (
           <li key={index}>
