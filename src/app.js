@@ -7,6 +7,7 @@ import './index.css';
 
 const App = () => {
   const [weatherData, setWeatherData] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null); // Nytt state för felmeddelanden
 
   // Använd initialisering för att hämta data från localStorage
   const [savedSearches, setSavedSearches] = useState(() => {
@@ -30,26 +31,30 @@ const App = () => {
     localStorage.setItem('favorites', JSON.stringify(favorites));
   }, [favorites]);
 
+  // Hämtar koordinater för staden eller platsen
   const getCityCoordinates = async (city) => {
     try {
       const response = await axios.get(`https://geocoding-api.open-meteo.com/v1/search`, {
         params: { name: city },
       });
 
+      // Om inga resultat finns
       if (!response.data.results || response.data.results.length === 0) {
-        throw new Error('Location not found');
+        throw new Error(`Location not found for "${city}". Please check the spelling or try another location.`);
       }
 
-      return response.data.results[0];
+      return response.data.results[0];  // Returnera den första träffen om resultat finns
     } catch (error) {
       console.error(error);
-      throw error;
+      throw new Error('Could not retrieve location. Please try again.');
     }
   };
 
+  // Hämtar vädret baserat på stad/plats
   const getWeather = async (city) => {
     try {
-      const cityData = await getCityCoordinates(city);
+      setErrorMessage(null);  // Återställ felmeddelandet innan ny förfrågan
+      const cityData = await getCityCoordinates(city); // Få stadens koordinater
 
       const response = await axios.get('https://api.open-meteo.com/v1/forecast', {
         params: {
@@ -72,15 +77,18 @@ const App = () => {
         weatherCondition,
       });
 
+      setErrorMessage(null);  // Om vädret hämtas korrekt, rensa eventuellt tidigare felmeddelande
+
       if (!savedSearches.includes(city)) {
         setSavedSearches([...savedSearches, city]);
       }
     } catch (error) {
       console.error(error);
-      setWeatherData({ error: 'Location not found. Please try again.' });
+      setErrorMessage(error.message);  // Visa felmeddelandet i UI:t
     }
   };
 
+  // Hämtar väder för den aktuella platsen (baserat på geolocation)
   const getCityName = async (latitude, longitude) => {
     try {
       const response = await axios.get('https://nominatim.openstreetmap.org/reverse', {
@@ -123,17 +131,19 @@ const App = () => {
             averageTemperature: isCelsius ? averageTemperature : celsiusToFahrenheit(averageTemperature),
             weatherCondition,
           });
+
+          setErrorMessage(null); // Nollställ felmeddelandet om allt går bra
         } catch (error) {
           console.error(error);
-          setWeatherData({ error: 'An error occurred while fetching weather data. Please try again later.' });
+          setErrorMessage('An error occurred while fetching weather data. Please try again later.');
         }
       }, (error) => {
         console.error(error);
-        setWeatherData({ error: 'An error occurred while fetching your location. Please try again later.' });
+        setErrorMessage('An error occurred while fetching your location. Please try again later.');
       });
     } else {
       console.error('Geolocation is not supported by this browser.');
-      setWeatherData({ error: 'Geolocation is not supported by this browser.' });
+      setErrorMessage('Geolocation is not supported by this browser.');
     }
   };
 
@@ -173,6 +183,7 @@ const App = () => {
   return (
     <div className="container">
       <h1>Find the current and average temperature in a city, town or place</h1>
+      {errorMessage && <p className="error">{errorMessage}</p>}  {/* Visa felmeddelandet */}
       <div className="change-temp-btn">
         <button onClick={toggleTemperatureUnit}>{isCelsius ? 'Fahrenheit' : 'Celsius'}</button>
       </div>
