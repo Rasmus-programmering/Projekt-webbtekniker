@@ -43,10 +43,16 @@ const App = () => {
         throw new Error(`Location not found for "${city}". Please check the spelling or try another location.`);
       }
 
-      return response.data.results[0];  // Returnera den första träffen om resultat finns
+      // Kontrollera om det returnerade platsnamnet matchar användarens input
+      const location = response.data.results[0];
+      if (!location.name.toLowerCase().includes(city.toLowerCase())) {
+        throw new Error(`Location "${city}" does not match any valid place.`);
+      }
+
+      return location;  // Returnera den första träffen om resultat finns och är giltigt
     } catch (error) {
       console.error(error);
-      throw new Error('Could not retrieve location. Please try again.');
+      throw new Error('Could not retrieve location. Please try again later or check your network connection.');
     }
   };
 
@@ -79,6 +85,7 @@ const App = () => {
 
       setErrorMessage(null);  // Om vädret hämtas korrekt, rensa eventuellt tidigare felmeddelande
 
+      // Spara endast om platsen är giltig
       if (!savedSearches.includes(city)) {
         setSavedSearches([...savedSearches, city]);
       }
